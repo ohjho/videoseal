@@ -35,3 +35,7 @@ You will need to replace some code in the original repositories to save the mode
 - [MBRS](https://github.com/jzyustc/MBRS), model used: EC_42.pth
 - [TrustMark](https://github.com/adobe/trustmark/), model used: Q
 - [WAM](https://github.com/facebookresearch/watermark-anything), model used: WAM trained on COCO
+
+## From the community
+
+[https://huggingface.co/tangtianzhong/img-wm-torchscript](https://huggingface.co/tangtianzhong/img-wm-torchscript)
