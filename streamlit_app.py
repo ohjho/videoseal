@@ -1,6 +1,7 @@
 import os, sys, json
 import pandas as pd
 import streamlit as st
+from stqdm import stqdm
 from inference_streaming_helpers import get_signature
 
 
@@ -11,13 +12,15 @@ def show_readme(st_asset):
             This app uses [VideoSeal](https://github.com/ohjho/videoseal/tree/st-demo) to detect signatures
 
             it's resilient against [some video edits](https://improved-eureka-7ke59kk.pages.github.io/notebooks/ffmpeg-videoseal-test.html)
+
+            To get `ffmpeg` to work on streamlit cloud, read this [tip from the forum](https://discuss.streamlit.io/t/using-ffmpeg-in-a-subprocess/35158/2)
             """
         )
 
 
 @st.cache_data
 def get_watermark(vid_url, max_frames: int = None):
-    wm = get_signature(vid_url, max_frames=max_frames)
+    wm = get_signature(vid_url, max_frames=max_frames, tqdm_func=stqdm)
     return wm
 
 
@@ -79,7 +82,7 @@ def Main():
             """,
         )
         else st.sidebar.slider(
-            "Max Frames", value=128, min_value=16, max_value=160, step=16
+            "Max Frames", value=32, min_value=16, max_value=160, step=16
         )
     )
     csv_url = st.sidebar.text_input(
@@ -98,7 +101,11 @@ def Main():
     if video_url:
         cols = st.columns(3)
         cols[0].video(video_url, muted=True)
-        if cols[1].button("Get Watermark"):
+        if cols[1].button(
+            "Get Watermark",
+            help="this could be slow running on CPU only",
+            icon=":material/coffee:",
+        ):
             wm = get_watermark(video_url, max_frames=max_frames)
             with cols[1].expander("signature", expanded=True):
                 st.write(wm["signature"])

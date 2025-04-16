@@ -122,7 +122,11 @@ def load_tensor_msg(txt_path: str, expected_len: int = 96, to_string: bool = Fal
 
 @app.command()
 def detect_video(
-    input_path: str, chunk_size: int, model=None, max_frames: int = None
+    input_path: str,
+    chunk_size: int,
+    model=None,
+    max_frames: int = None,
+    tqdm_func=tqdm.tqdm,
 ) -> None:
     model = model if model else load_model()
     # Read video dimensions
@@ -149,7 +153,7 @@ def detect_video(
     frames_count = 0
     max_frames = max_frames if max_frames else num_frames
     soft_msgs = []
-    for in_bytes in tqdm.tqdm(
+    for in_bytes in tqdm_func(
         iter(lambda: process1.stdout.read(frame_size), b""),
         total=num_frames,
         desc="Watermark extraction",
@@ -189,10 +193,15 @@ def get_signature(
     chunk_size: int = 16,
     signature_txt_path: str = None,
     max_frames: int = 0,
+    tqdm_func=tqdm.tqdm,
 ):
     m = load_model()
     soft_msgs = detect_video(
-        model=m, input_path=vid_path, chunk_size=chunk_size, max_frames=max_frames
+        model=m,
+        input_path=vid_path,
+        chunk_size=chunk_size,
+        max_frames=max_frames,
+        tqdm_func=tqdm_func,
     )
 
     if signature_txt_path:
