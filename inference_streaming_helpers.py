@@ -3,7 +3,7 @@ install some of my personal favorites first:
 pip install typer methodtools loguru httpx
 """
 
-import os, sys, typer, videoseal, torch, ffmpeg, subprocess, tqdm, httpx
+import os, sys, typer, videoseal, torch, ffmpeg, subprocess, tqdm
 import numpy as np
 import pandas as pd
 from methodtools import lru_cache
@@ -19,6 +19,8 @@ logger.add(
 
 
 def is_valid_url(url_string):
+    import httpx
+
     try:
         url = httpx.URL(url_string)
         return url.scheme and url.host

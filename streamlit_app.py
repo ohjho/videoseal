@@ -4,6 +4,17 @@ import streamlit as st
 from inference_streaming_helpers import get_signature
 
 
+def show_readme(st_asset):
+    with st_asset.expander("readme", expanded=True, icon=":material/description:"):
+        st.info(
+            f"""
+            This app uses [VideoSeal](https://github.com/ohjho/videoseal/tree/st-demo) to detect signatures
+
+            it's resilient against [some video edits](https://improved-eureka-7ke59kk.pages.github.io/notebooks/ffmpeg-videoseal-test.html)
+            """
+        )
+
+
 @st.cache_data
 def get_watermark(vid_url, max_frames: int = None):
     wm = get_signature(vid_url, max_frames=max_frames)
@@ -25,7 +36,7 @@ def show_original(
             else:
                 st.warning(f"cannot find {gf_id} in {id_col}")
         else:
-            st.warning(f"signature {signature} is not recognized.")
+            st.warning(f"signature `{signature}` is not recognized.")
 
 
 def Main():
@@ -42,16 +53,34 @@ def Main():
         size="large",
     )
     st.title("Video Seal Demo")
-    # show_readme(st.sidebar)
+    show_readme(st.sidebar)
     video_url = st.text_input(
         "Video URL",
-        # value="https://miro-ps-bucket-copy.s3.us-west-2.amazonaws.com/storage/jho/test_videos/finishline_videos/hc-charlotte-2025/rt103124_tracks-dx39-faceanchors-v3-matched-cossim63.csv",
-        # help="dataset should be created following [these instructions](https://improved-eureka-7ke59kk.pages.github.io/notebooks/vinyasa-face-anchor-matching.html#tracks-face-anchors)",
+        value="https://miro-ps-bucket-copy.s3.us-west-2.amazonaws.com/storage/jho/test_videos/videoseal/signed/miyazaki_LOTR.mp4",
+        help=f"""
+        linked to any video hosted on S3 will work
+
+        Signed videos are available here: `s3://miro-ps-bucket-copy/storage/jho/test_videos/videoseal/signed/`
+
+        Here are some examples:
+        * [trimmed version of `gf:28162385`](https://miro-ps-bucket-copy.s3.us-west-2.amazonaws.com/storage/jho/test_videos/videoseal/signed/00b37e81-07be-4ad1-881b-51718eee488d/trim_15-18.mp4)
+        * [cropped,scaled, trimmed version of `gf:28162385`](https://miro-ps-bucket-copy.s3.us-west-2.amazonaws.com/storage/jho/test_videos/videoseal/signed/00b37e81-07be-4ad1-881b-51718eee488d/chained.mp4)
+        """,
     )
     max_frames = (
         None
-        if st.sidebar.toggle("Analyze Full Videos")
-        else st.sidebar.slider("Max Frames", min_value=16, max_value=160, step=16)
+        if st.sidebar.toggle(
+            "Analyze Full Videos",
+            value=False,
+            help="""
+            turned off by default for performance, however...
+
+            Errors are averaged out over large number of frames, therefore, analyzing full video will give the best results
+            """,
+        )
+        else st.sidebar.slider(
+            "Max Frames", value=128, min_value=16, max_value=160, step=16
+        )
     )
     csv_url = st.sidebar.text_input(
         "Reference Video Dataset CSV URL",
@@ -59,6 +88,12 @@ def Main():
         help="reference video dataset",
     )
     df = pd.read_csv(csv_url) if csv_url else None
+
+    # user's cache management
+    if st.sidebar.button("Clear cache", help="the get watermark function is cached"):
+        st.cache_data.clear()
+        st.cache_resource.clear()
+        st.rerun()
 
     if video_url:
         cols = st.columns(3)
