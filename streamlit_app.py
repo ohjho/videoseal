@@ -20,7 +20,7 @@ def show_readme(st_asset):
 
 @st.cache_data
 def get_watermark(vid_url, max_frames: int = None):
-    wm = get_signature(vid_url, max_frames=max_frames, tqdm_func=stqdm)
+    wm = get_signature(vid_url, max_frames=max_frames, tqdm_override=stqdm)
     return wm
 
 

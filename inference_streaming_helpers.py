@@ -3,7 +3,8 @@ install some of my personal favorites first:
 pip install typer methodtools loguru httpx
 """
 
-import os, sys, typer, videoseal, torch, ffmpeg, subprocess, tqdm
+import os, sys, typer, videoseal, torch, ffmpeg, subprocess
+from tqdm import tqdm
 import numpy as np
 import pandas as pd
 from methodtools import lru_cache
@@ -126,7 +127,7 @@ def detect_video(
     chunk_size: int,
     model=None,
     max_frames: int = None,
-    tqdm_func=tqdm.tqdm,
+    tqdm_func=tqdm,
 ) -> None:
     model = model if model else load_model()
     # Read video dimensions
@@ -193,8 +194,9 @@ def get_signature(
     chunk_size: int = 16,
     signature_txt_path: str = None,
     max_frames: int = 0,
-    tqdm_func=tqdm.tqdm,
+    tqdm_override=None,
 ):
+    tqdm_func = tqdm_override if tqdm_override else tqdm
     m = load_model()
     soft_msgs = detect_video(
         model=m,
@@ -292,7 +294,7 @@ def embed_video(
     chunk = np.zeros((chunk_size, height, width, 3), dtype=np.uint8)
     frames_in_chunk = 0
 
-    for in_bytes in tqdm.tqdm(
+    for in_bytes in tqdm(
         iter(lambda: process1.stdout.read(frame_size), b""),
         total=num_frames,
         desc="Watermark embedding",
@@ -358,9 +360,7 @@ def embed_videos_df(
     save_soft_msg: bool = False,
 ):
     df = dataframe if isinstance(dataframe, pd.DataFrame) else pd.read_csv(dataframe)
-    for i, row in tqdm.tqdm(
-        df.iterrows(), total=len(df), desc="signing videos", position=0
-    ):
+    for i, row in tqdm(df.iterrows(), total=len(df), desc="signing videos", position=0):
         # if not is_valid_url(row[video_path_col]) or not os.path.isfile(row[video_path_col]):
         if not isinstance(row[video_path_col], str):
             logger.debug(f"missing {video_path_col} at row {i}")
